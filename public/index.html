@@ -177,6 +177,65 @@ cursor:pointer; letter-spacing:1px; transition:all .2s;
 .copy-btn:hover { background:var(–milk-tea-mid); }
 .copy-btn.copied { background:var(–dark-brown); color:var(–cream); border-color:var(–dark-brown); }
 
+.version-tabs {
+display: flex;
+gap: 10px;
+margin-bottom: 18px;
+}
+.version-tab {
+flex: 1;
+padding: 10px;
+border: 1.5px solid var(–milk-tea-warm);
+border-radius: 12px;
+background: var(–milk-tea-light);
+color: var(–text-soft);
+font-family: ‘Noto Sans TC’, sans-serif;
+font-size: 14px;
+font-weight: 700;
+cursor: pointer;
+transition: all .2s;
+letter-spacing: 1px;
+}
+.version-tab.active {
+background: var(–dark-brown);
+border-color: var(–dark-brown);
+color: var(–cream);
+box-shadow: 0 4px 12px rgba(107,66,38,.3);
+}
+
+.shoot-card {
+margin-top: 20px;
+background: linear-gradient(135deg, rgba(240,200,80,.12), rgba(196,149,106,.1));
+border: 1.5px solid var(–milk-tea-warm);
+border-radius: 16px;
+padding: 18px 20px;
+}
+.shoot-title {
+font-family: ‘Noto Serif TC’, serif;
+font-size: 14px;
+font-weight: 700;
+color: var(–dark-brown);
+letter-spacing: 2px;
+margin-bottom: 12px;
+padding-bottom: 10px;
+border-bottom: 1.5px dashed var(–milk-tea-warm);
+}
+.shoot-content {
+font-size: 14px;
+line-height: 1.9;
+color: var(–text-main);
+white-space: pre-wrap;
+word-break: break-word;
+}
+.shoot-content .shoot-item {
+display: block;
+margin-bottom: 10px;
+padding: 10px 14px;
+background: rgba(255,255,255,.7);
+border-radius: 10px;
+border-left: 3px solid var(–accent-yellow);
+}
+
 .footer { text-align:center; margin-top:28px; font-size:12px; color:var(–text-soft); letter-spacing:1px; opacity:.6; }
 
 @keyframes fadeDown { from{opacity:0;transform:translateY(-18px)} to{opacity:1;transform:translateY(0)} }
@@ -250,10 +309,11 @@ cursor:pointer; letter-spacing:1px; transition:all .2s;
 
   <div class="card">
     <div class="section-label">三　說話風格</div>
-    <div class="btn-grid-3" id="style-group">
+    <div class="btn-grid-2" id="style-group">
       <button class="toggle-btn active" data-val="輕鬆幽默">🖐 輕鬆幽默</button>
       <button class="toggle-btn" data-val="專業乾貨">💡 專業乾貨</button>
       <button class="toggle-btn" data-val="情感故事">❤️ 情感故事</button>
+      <button class="toggle-btn" data-val="藏鏡人互動">🎭 藏鏡人互動</button>
     </div>
   </div>
 
@@ -294,21 +354,47 @@ cursor:pointer; letter-spacing:1px; transition:all .2s;
       <div class="result-title">📋 你的腳本來了！</div>
       <div class="result-tags" id="result-tags"></div>
     </div>
-    <div class="script-content" id="script-content"></div>
-    <button class="copy-btn" id="copy-btn" onclick="copyScript()">📋 複製全文</button>
+    <div class="version-tabs">
+      <button class="version-tab active" onclick="switchVersion(1)">版本一</button>
+      <button class="version-tab" onclick="switchVersion(2)">版本二</button>
+    </div>
+    <div id="version-1">
+      <div class="script-content" id="script-content-1"></div>
+      <div class="shoot-card" id="shoot-card-1" style="display:none">
+        <div class="shoot-title">🎬 拍攝情境建議</div>
+        <div class="shoot-content" id="shoot-content-1"></div>
+      </div>
+      <button class="copy-btn" id="copy-btn-1" onclick="copyScript(1)">📋 複製版本一</button>
+    </div>
+    <div id="version-2" style="display:none">
+      <div class="script-content" id="script-content-2"></div>
+      <div class="shoot-card" id="shoot-card-2" style="display:none">
+        <div class="shoot-title">🎬 拍攝情境建議</div>
+        <div class="shoot-content" id="shoot-content-2"></div>
+      </div>
+      <button class="copy-btn" id="copy-btn-2" onclick="copyScript(2)">📋 複製版本二</button>
+    </div>
   </div>
 
   <div class="footer">Made with ♥ by 葳點子 Wei's Points</div>
 </div>
 
 <script>
-  // Toggle groups
-  document.querySelectorAll('[id$="-group"]').forEach(group => {
+  // Single-select groups (style, duration)
+  ['style-group','duration-group'].forEach(groupId => {
+    const group = document.getElementById(groupId);
     group.querySelectorAll('.toggle-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
       });
+    });
+  });
+
+  // Multi-select group (platform)
+  document.getElementById('platform-group').querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.classList.toggle('active');
     });
   });
 
@@ -321,9 +407,15 @@ cursor:pointer; letter-spacing:1px; transition:all .2s;
     return document.querySelector(`#${groupId} .toggle-btn.active`)?.dataset.val || '';
   }
 
+  function getActiveMulti(groupId) {
+    return Array.from(document.querySelectorAll(`#${groupId} .toggle-btn.active`))
+      .map(b => b.dataset.val);
+  }
+
   async function generate() {
     const topic    = document.getElementById('topic').value;
-    const platform = getActive('platform-group');
+    const platforms = getActiveMulti('platform-group');
+    const platform = platforms.length ? platforms.join('、') : 'TikTok／抖音';
     const style    = getActive('style-group');
     const duration = getActive('duration-group');
     const idea     = document.getElementById('video-idea').value.trim();
@@ -339,6 +431,11 @@ cursor:pointer; letter-spacing:1px; transition:all .2s;
       errorBox.classList.add('show');
       return;
     }
+    if (!platforms.length) {
+      errorBox.textContent = '⚠️ 請至少選擇一個發布平台！';
+      errorBox.classList.add('show');
+      return;
+    }
 
     const btn = document.getElementById('gen-btn');
     const lbl = document.getElementById('btn-label');
@@ -346,24 +443,81 @@ cursor:pointer; letter-spacing:1px; transition:all .2s;
     lbl.innerHTML = `<div class="loading-wrap"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>腳本產生中...</span></div>`;
 
     const wordCount = duration === '30–60秒' ? '100–160 字' : '200–280 字';
-    const prompt = `你是一位專業的短影音腳本創作者。請根據以下條件，幫我寫一段短影音腳本：
+    const styleGuide = {
+      '輕鬆幽默': '用輕鬆、接地氣的語氣，可以加入自嘲或幽默小梗，讓人看了想笑又有收穫',
+      '專業乾貨': '用精準、有條理的語氣，數據或具體案例優先，讓人覺得「學到了」',
+      '情感故事': '用第一人稱說真實故事，有情緒起伏，讓人有共鳴想繼續看',
+      '藏鏡人互動': '雙人互動腳本。藏鏡人擁有上帝視角，從幕後透過聲音或字幕介入，拋出問題、吐槽、爆料或突然改變規則；IP（主角）在鏡頭前即時反應，展現真實個性。像 VTuber 幕後 Staff 引導直播的感覺，觀眾會因為「不知道下一秒發生什麼」而停止滑走',
+    };
+    const platformGuide = platform.includes('小紅書') ? '語氣偏溫柔療癒，多用換行和 emoji，像日記風格' :
+      platform.includes('YouTube') ? '開頭要有強烈懸念，節奏稍慢，說清楚一點' :
+      platform.includes('IG') ? '視覺感強，句子簡短有力，emoji 適量' :
+      '節奏快、直接破題，前3秒就要抓住人';
+    const prompt = `你是一位擁有百萬粉絲的短影音腳本創作者，擅長寫出讓人停下來看完的爆款腳本。
 
+【創作條件】
 主題：${topic}
-平台：${platform}
+發布平台：${platform}
 說話風格：${style}
 影片長度：${duration}
-頻道名稱：${channel}${idea ? `\n創作者的想法：${idea}` : ''}
+頻道名稱：${channel}${idea ? `
+創作者想法：${idea}` : ''}
 
-腳本需求：
-- 長度：適合 ${duration} 朗讀，大約 ${wordCount}（繁體中文）
-- 結構：需包含 ①開場掛鉤Hook（前5秒抓住注意力）、②中段內容（核心價值3點）、③結束CTA行動呼籲
-- 風格：${style}，符合 ${platform} 平台調性
-- CTA：在結尾提及「${channel}」頻道，引導觀眾追蹤
-- 格式：請用以下標題區隔段落
-  【🎣 開場掛鉤 Hook】
-  【💡 主要內容】
-  【📣 結束 CTA】
-- 語氣自然口語，像真人說話，避免書面化`;
+【平台調性】${platformGuide}
+【風格要求】${styleGuide[style] || style}
+
+【腳本格式】請嚴格按照以下結構輸出，繁體中文，字數約 ${wordCount}：
+
+${style === '藏鏡人互動' ? `【🎭 藏鏡人互動腳本格式】
+腳本採雙角色對話，請清楚標示每一句的說話者：
+
+【藏鏡人】設定：幕後的神秘引導者，不露臉，只有聲音或字幕。擁有上帝視角，可以突然爆料、吐槽、改變規則或拋出讓 IP 措手不及的問題。語氣可以是神秘、調皮、甚至故意刁難。
+【${channel || 'IP'}】設定：鏡頭前的主角，對藏鏡人的介入即時反應，展現真實個性與專業內容。
+
+腳本結構如下：
+
+【🎣 開場｜前3秒製造懸念】
+藏鏡人先用一句讓觀眾好奇的話破題（可以是爆料、挑釁或反常識問題）
+IP 用一句話接住，留下懸念讓觀眾想繼續看
+
+【💡 主體｜藏鏡人出題 × IP 接招（2-3回合）】
+每個回合：藏鏡人拋出問題或突發狀況 → IP 回應並帶出核心內容
+節奏要緊湊，每個回合都要有「情緒點」或「乾貨點」，讓觀眾覺得值得看完
+
+【📣 結尾 CTA｜收網】
+藏鏡人拋出最後一個開放式問題或金句挑釁
+IP 用有溫度的話收尾，自然帶出「${channel}」頻道名，引導觀眾追蹤或在留言區回答藏鏡人的問題` 
+: `【🎣 開場掛鉤 Hook】
+（前3秒必須讓人停止滑動。用問句、驚人數據、反常識說法、或直接說出觀眾的痛點。禁止用「大家好我是XXX」開頭）
+
+【💡 主要內容】
+（用2-3個具體、有畫面感的重點展開。每個重點要有小標或轉折詞帶出，節奏緊湊不拖泥帶水）
+
+【📣 結束 CTA】
+（用一句有溫度的話收尾，自然帶出「${channel}」頻道名，引導追蹤或留言，不要生硬）`}
+
+【注意事項】
+- 每句話都要像真人在說，不要書面化
+- 加入 2-3 個符合平台風格的 emoji
+- 腳本要讓人有「想馬上拍」的衝動
+
+請依照以下格式輸出兩個完整版本，不要加任何多餘說明：
+
+【版本一】
+（第一個腳本，同樣的主題但用不同的切入角度或開場方式）
+
+【版本一｜🎬 拍攝情境建議】
+📍 拍攝場景：建議在哪裡拍、什麼樣的背景最適合
+🎨 畫面風格：燈光、構圖、穿搭或道具的簡單建議
+⚡ 拍攝小技巧：讓這支影片更吸睛的一個實用技巧
+
+【版本二】
+（第二個腳本，換一個切入角度，開場方式和版本一明顯不同）
+
+【版本二｜🎬 拍攝情境建議】
+📍 拍攝場景：建議在哪裡拍、什麼樣的背景最適合
+🎨 畫面風格：燈光、構圖、穿搭或道具的簡單建議
+⚡ 拍攝小技巧：讓這支影片更吸睛的一個實用技巧`;
 
     try {
       // 呼叫自己的後端 /api/generate，而不是直接打 Anthropic
@@ -376,10 +530,46 @@ cursor:pointer; letter-spacing:1px; transition:all .2s;
       if (!res.ok) throw new Error(data.error || `錯誤 ${res.status}`);
       if (!data.result) throw new Error('回傳內容為空，請再試一次！');
 
-      // Render
-      document.getElementById('script-content').innerHTML = formatScript(data.result);
+      // Parse two versions
+      const raw = data.result;
+
+      function extractVersion(text, label) {
+        const regex = new RegExp('【' + label + '】([\\s\\S]*?)(?=【版本|$)');
+        const m = text.match(regex);
+        return m ? m[1].trim() : '';
+      }
+
+      function extractShoot(text, label) {
+        const regex = new RegExp('【' + label + '｜🎬 拍攝情境建議】([\\s\\S]*?)(?=【版本|$)');
+        const m = text.match(regex);
+        return m ? m[1].trim() : '';
+      }
+
+      const v1script = extractVersion(raw, '版本一');
+      const v1shoot  = extractShoot(raw, '版本一');
+      const v2script = extractVersion(raw, '版本二');
+      const v2shoot  = extractShoot(raw, '版本二');
+
+      document.getElementById('script-content-1').innerHTML = formatScript(v1script);
+      document.getElementById('script-content-2').innerHTML = formatScript(v2script);
+
+      ['1','2'].forEach(n => {
+        const shoot = n === '1' ? v1shoot : v2shoot;
+        const shootCard = document.getElementById('shoot-card-' + n);
+        const shootContent = document.getElementById('shoot-content-' + n);
+        if (shoot) {
+          shootContent.innerHTML = formatShoot(shoot);
+          shootCard.style.display = 'block';
+        } else {
+          shootCard.style.display = 'none';
+        }
+      });
+
       document.getElementById('result-tags').innerHTML =
-        [topic, platform, style, duration].map(t => `<span class="tag">${t}</span>`).join('');
+        [topic, ...platforms, style, duration].map(t => `<span class="tag">${t}</span>`).join('');
+
+      // Reset to version 1
+      switchVersion(1);
       resultCard.classList.add('show');
       resultCard.scrollIntoView({ behavior:'smooth', block:'start' });
 
@@ -396,13 +586,35 @@ cursor:pointer; letter-spacing:1px; transition:all .2s;
     return text.replace(/【([^】]+)】/g, '<span class="sec">【$1】</span>').replace(/\n/g, '<br>');
   }
 
-  function copyScript() {
-    const text = document.getElementById('script-content').innerText;
-    navigator.clipboard.writeText(text).then(() => {
-      const btn = document.getElementById('copy-btn');
+  function formatShoot(text) {
+    return text.split('\n')
+      .filter(line => line.trim())
+      .map(line => {
+        if (line.startsWith('📍') || line.startsWith('🎨') || line.startsWith('⚡')) {
+          return `<span class="shoot-item">${line}</span>`;
+        }
+        return `<span>${line}</span>`;
+      })
+      .join('');
+  }
+
+  function switchVersion(n) {
+    document.getElementById('version-1').style.display = n === 1 ? 'block' : 'none';
+    document.getElementById('version-2').style.display = n === 2 ? 'block' : 'none';
+    document.querySelectorAll('.version-tab').forEach((tab, i) => {
+      tab.classList.toggle('active', i + 1 === n);
+    });
+  }
+
+  function copyScript(n) {
+    const text = document.getElementById('script-content-' + n).innerText
+      + '\n\n' + (document.getElementById('shoot-content-' + n)?.innerText || '');
+    navigator.clipboard.writeText(text.trim()).then(() => {
+      const btn = document.getElementById('copy-btn-' + n);
+      const orig = btn.textContent;
       btn.textContent = '✅ 已複製！';
       btn.classList.add('copied');
-      setTimeout(() => { btn.textContent = '📋 複製全文'; btn.classList.remove('copied'); }, 2500);
+      setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2500);
     });
   }
 </script>
