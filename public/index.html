@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>葳點子 × 短影音腳本產生器</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Noto+Sans+TC:wght@300;400;500;700&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --milk-tea-lightest: #fdf6ee;
+    --milk-tea-light: #f5e6d3;
+    --milk-tea-mid: #e8d0b5;
+    --milk-tea-warm: #d4b896;
+    --milk-tea-brown: #c4956a;
+    --dark-brown: #6b4226;
+    --deep-brown: #3d2010;
+    --cream: #faf3e8;
+    --accent-yellow: #f0c850;
+    --text-main: #3d2010;
+    --text-soft: #8b6347;
+    --shadow-warm: rgba(107,66,38,0.15);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--milk-tea-lightest);
+    font-family: 'Noto Sans TC', sans-serif;
+    color: var(--text-main);
+    min-height: 100vh;
+  }
+  body::before {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(ellipse at 10% 20%, rgba(212,184,150,.25) 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 80%, rgba(240,200,80,.12) 0%, transparent 50%);
+  }
+  .page-wrap {
+    position:relative; z-index:1;
+    max-width:660px; margin:0 auto;
+    padding:32px 20px 64px;
+  }
+
+/* Header */
+.header { text-align:center; margin-bottom:32px; animation:fadeDown .6s ease both; }
+.logo-badge {
+display:inline-flex; align-items:center; gap:10;
+background:white; border:2px solid var(–milk-tea-warm);
+border-radius:50px; padding:8px 20px; margin-bottom:16px;
+box-shadow:0 4px 16px var(–shadow-warm);
+}
+.logo-text { font-family:‘Caveat’,cursive; font-size:17px; color:var(–dark-brown); font-weight:700; }
+.logo-dot { width:10px; height:10px; background:var(–accent-yellow); border-radius:50%; box-shadow:0 0 0 3px rgba(240,200,80,.3); display:inline-block; margin:0 4px; }
+h1 { font-family:‘Noto Serif TC’,serif; font-size:clamp(26px,6vw,34px); font-weight:900; color:var(–deep-brown); letter-spacing:2px; line-height:1.3; }
+h1 span { color:var(–milk-tea-brown); }
+.subtitle { margin-top:8px; font-size:14px; color:var(–text-soft); letter-spacing:1px; }
+
+/* Card */
+.card {
+background:rgba(255,250,244,.92); border:1.5px solid var(–milk-tea-mid);
+border-radius:24px; padding:24px; margin-bottom:14px;
+box-shadow:0 8px 32px var(–shadow-warm);
+animation:fadeUp .5s ease both;
+}
+.card:nth-child(2){animation-delay:.05s} .card:nth-child(3){animation-delay:.1s}
+.card:nth-child(4){animation-delay:.15s} .card:nth-child(5){animation-delay:.2s}
+.card:nth-child(6){animation-delay:.25s} .card:nth-child(7){animation-delay:.3s}
+
+.section-label {
+display:flex; align-items:center; gap:8px;
+font-size:13px; font-weight:700; color:var(–dark-brown);
+letter-spacing:2px; margin-bottom:14px;
+}
+.section-label::before {
+content:’’; width:4px; height:18px; flex-shrink:0;
+background:linear-gradient(180deg,var(–milk-tea-brown),var(–accent-yellow));
+border-radius:4px;
+}
+
+/* Select */
+.select-wrap { position:relative; }
+select {
+width:100%; appearance:none; background:var(–milk-tea-light);
+border:1.5px solid var(–milk-tea-warm); border-radius:14px;
+padding:13px 42px 13px 16px; font-size:15px;
+font-family:‘Noto Sans TC’,sans-serif; color:var(–text-main);
+cursor:pointer; transition:all .2s;
+}
+select:focus { outline:none; border-color:var(–milk-tea-brown); background:white; box-shadow:0 0 0 3px rgba(196,149,106,.2); }
+.select-arrow { position:absolute; right:14px; top:50%; transform:translateY(-50%); pointer-events:none; color:var(–dark-brown); font-size:11px; }
+
+/* Toggle buttons */
+.btn-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.btn-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+.toggle-btn {
+padding:11px 10px; border:1.5px solid var(–milk-tea-warm);
+border-radius:12px; background:var(–milk-tea-light);
+color:var(–text-soft); font-family:‘Noto Sans TC’,sans-serif;
+font-size:13.5px; font-weight:500; cursor:pointer;
+text-align:center; line-height:1.4; transition:all .2s;
+}
+.toggle-btn:hover { border-color:var(–milk-tea-brown); background:var(–milk-tea-mid); color:var(–dark-brown); }
+.toggle-btn.active {
+background:var(–dark-brown); border-color:var(–dark-brown);
+color:var(–cream); box-shadow:0 4px 12px rgba(107,66,38,.3);
+transform:translateY(-2px);
+}
+
+/* Input / Textarea */
+input[type=“text”], textarea {
+width:100%; background:var(–milk-tea-light);
+border:1.5px solid var(–milk-tea-warm); border-radius:14px;
+padding:13px 16px; font-size:14.5px;
+font-family:‘Noto Sans TC’,sans-serif; color:var(–text-main);
+transition:all .2s;
+}
+input[type=“text”]:focus, textarea:focus {
+outline:none; border-color:var(–milk-tea-brown);
+background:white; box-shadow:0 0 0 3px rgba(196,149,106,.2);
+}
+input[type=“text”]::placeholder, textarea::placeholder { color:var(–text-soft); opacity:.7; }
+textarea { resize:none; line-height:1.7; }
+.char-count { text-align:right; font-size:11.5px; color:var(–text-soft); margin-top:5px; }
+
+/* Generate button */
+.generate-btn {
+width:100%; padding:17px 24px; margin-top:8px;
+background:linear-gradient(135deg,var(–milk-tea-brown) 0%,var(–dark-brown) 60%,#4a2c18 100%);
+color:var(–cream); border:none; border-radius:18px;
+font-family:‘Noto Serif TC’,serif; font-size:17px; font-weight:700;
+letter-spacing:3px; cursor:pointer; position:relative; overflow:hidden;
+box-shadow:0 8px 24px rgba(107,66,38,.4); transition:all .2s;
+}
+.generate-btn:hover { transform:translateY(-2px); box-shadow:0 12px 32px rgba(107,66,38,.5); }
+.generate-btn:disabled { opacity:.65; cursor:not-allowed; transform:none; }
+.generate-btn::before {
+content:’’; position:absolute; top:0; left:-100%; width:100%; height:100%;
+background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);
+transition:left .5s;
+}
+.generate-btn:hover::before { left:100%; }
+
+/* Loading dots */
+.loading-wrap { display:flex; align-items:center; justify-content:center; gap:10px; }
+.dot { display:inline-block; width:7px; height:7px; background:var(–cream); border-radius:50%; animation:bounce 1.2s infinite; }
+.dot:nth-child(2){animation-delay:.2s} .dot:nth-child(3){animation-delay:.4s}
+
+/* Error */
+.error-box {
+background:#fff0f0; border:1.5px solid #e8a0a0;
+border-radius:14px; padding:13px 16px; color:#8b2020;
+font-size:14px; margin-top:14px; line-height:1.6; display:none;
+}
+.error-box.show { display:block; }
+
+/* Result */
+.result-card {
+background:linear-gradient(160deg,#fff9f2 0%,#fdf0e0 100%);
+border:1.5px solid var(–milk-tea-warm); border-radius:24px;
+padding:26px 24px; margin-top:18px;
+box-shadow:0 12px 40px var(–shadow-warm);
+display:none; animation:fadeUp .5s ease both;
+}
+.result-card.show { display:block; }
+.result-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:8px; }
+.result-title { font-family:‘Noto Serif TC’,serif; font-size:16px; font-weight:700; color:var(–dark-brown); letter-spacing:2px; }
+.result-tags { display:flex; gap:6px; flex-wrap:wrap; }
+.tag { font-size:11px; font-weight:600; padding:3px 10px; border-radius:50px; background:var(–milk-tea-mid); color:var(–dark-brown); }
+.script-content { font-size:14.5px; line-height:2; color:var(–text-main); white-space:pre-wrap; word-break:break-word; }
+.script-content .sec { font-family:‘Noto Serif TC’,serif; font-size:13px; font-weight:700; color:var(–milk-tea-brown); letter-spacing:2px; display:block; margin-top:16px; margin-bottom:2px; border-left:3px solid var(–accent-yellow); padding-left:10px; }
+.copy-btn {
+width:100%; margin-top:18px; padding:12px;
+background:var(–milk-tea-light); border:1.5px solid var(–milk-tea-warm);
+border-radius:12px; color:var(–dark-brown);
+font-family:‘Noto Sans TC’,sans-serif; font-size:14px; font-weight:600;
+cursor:pointer; letter-spacing:1px; transition:all .2s;
+}
+.copy-btn:hover { background:var(–milk-tea-mid); }
+.copy-btn.copied { background:var(–dark-brown); color:var(–cream); border-color:var(–dark-brown); }
+
+.footer { text-align:center; margin-top:28px; font-size:12px; color:var(–text-soft); letter-spacing:1px; opacity:.6; }
+
+@keyframes fadeDown { from{opacity:0;transform:translateY(-18px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeUp   { from{opacity:0;transform:translateY(18px)}  to{opacity:1;transform:translateY(0)} }
+@keyframes bounce   { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+</style>
+
+</head>
+<body>
+<div class="page-wrap">
+
+  <div class="header">
+    <div class="logo-badge">
+      <span class="logo-dot"></span>
+      <span class="logo-text">Wei's Points × 葳點子</span>
+      <span class="logo-dot"></span>
+    </div>
+    <h1>短影音<span>腳本</span>產生器</h1>
+    <p class="subtitle">✦ 爆款腳本，AI 幫你寫好 ✦</p>
+  </div>
+
+  <!-- 1. 選題 -->
+
+  <div class="card">
+    <div class="section-label">一　選題方向</div>
+    <div class="select-wrap">
+      <select id="topic">
+        <option value="">── 請選擇熱門主題 ──</option>
+        <optgroup label="🔧 科技 &amp; 工具">
+          <option>AI工具推薦</option><option>ChatGPT使用技巧</option><option>效率工具分享</option><option>數位極簡生活</option>
+        </optgroup>
+        <optgroup label="💰 理財 &amp; 職場">
+          <option>個人理財入門</option><option>存錢挑戰技巧</option><option>副業收入分享</option><option>職場生存法則</option><option>斜槓創業故事</option>
+        </optgroup>
+        <optgroup label="🥗 飲食 &amp; 健康">
+          <option>減肥飲食法</option><option>健康食譜分享</option><option>間歇性斷食</option><option>飲食控制心得</option>
+        </optgroup>
+        <optgroup label="💪 健身 &amp; 運動">
+          <option>居家健身訓練</option><option>增肌減脂方法</option><option>瑜珈伸展放鬆</option><option>跑步入門攻略</option>
+        </optgroup>
+        <optgroup label="💄 美妝 &amp; 穿搭">
+          <option>平價彩妝推薦</option><option>日常穿搭分享</option><option>換季衣櫃整理</option><option>素顏保養流程</option>
+        </optgroup>
+        <optgroup label="🌸 女力 &amp; 身心">
+          <option>女力自我成長</option><option>情緒管理方法</option><option>邊界感建立技巧</option><option>正念冥想入門</option>
+        </optgroup>
+        <optgroup label="🐾 寵物 &amp; 生活">
+          <option>貓咪日常養育</option><option>狗狗訓練技巧</option><option>居家收納整理</option><option>植物療癒種植</option>
+        </optgroup>
+        <optgroup label="✈️ 旅行 &amp; 體驗">
+          <option>窮遊旅行攻略</option><option>一個人旅行</option>
+        </optgroup>
+      </select>
+      <span class="select-arrow">▼</span>
+    </div>
+  </div>
+
+  <!-- 2. 平台 -->
+
+  <div class="card">
+    <div class="section-label">二　發布平台</div>
+    <div class="btn-grid-2" id="platform-group">
+      <button class="toggle-btn active" data-val="TikTok／抖音">🎵 TikTok／抖音</button>
+      <button class="toggle-btn" data-val="Instagram Reels">📸 IG Reels</button>
+      <button class="toggle-btn" data-val="YouTube Shorts">▶️ YT Shorts</button>
+      <button class="toggle-btn" data-val="小紅書">📕 小紅書</button>
+    </div>
+  </div>
+
+  <!-- 3. 風格 -->
+
+  <div class="card">
+    <div class="section-label">三　說話風格</div>
+    <div class="btn-grid-3" id="style-group">
+      <button class="toggle-btn active" data-val="輕鬆幽默">🖐 輕鬆幽默</button>
+      <button class="toggle-btn" data-val="專業乾貨">💡 專業乾貨</button>
+      <button class="toggle-btn" data-val="情感故事">❤️ 情感故事</button>
+    </div>
+  </div>
+
+  <!-- 4. 長度 -->
+
+  <div class="card">
+    <div class="section-label">四　影片長度</div>
+    <div class="btn-grid-2" id="duration-group">
+      <button class="toggle-btn active" data-val="30–60秒">⚡ 30–60 秒</button>
+      <button class="toggle-btn" data-val="60–90秒">🎬 60–90 秒</button>
+    </div>
+  </div>
+
+  <!-- 5. 想法 -->
+
+  <div class="card">
+    <div class="section-label">五　影片想法（選填）</div>
+    <textarea id="video-idea" rows="3" maxlength="200"
+      placeholder="例如：想分享我用 AI 工具一週幫我省下 10 小時的真實心得…"></textarea>
+    <div class="char-count"><span id="idea-count">0</span> / 200</div>
+  </div>
+
+  <!-- 6. 頻道名稱 -->
+
+  <div class="card">
+    <div class="section-label">六　頻道名稱</div>
+    <input type="text" id="channel-name" maxlength="30" placeholder="例如：AI小白日記">
+  </div>
+
+  <button class="generate-btn" id="gen-btn" onclick="generate()">
+    <span id="btn-label">✦ 立即產生腳本 ✦</span>
+  </button>
+
+  <div class="error-box" id="error-box"></div>
+
+  <div class="result-card" id="result-card">
+    <div class="result-header">
+      <div class="result-title">📋 你的腳本來了！</div>
+      <div class="result-tags" id="result-tags"></div>
+    </div>
+    <div class="script-content" id="script-content"></div>
+    <button class="copy-btn" id="copy-btn" onclick="copyScript()">📋 複製全文</button>
+  </div>
+
+  <div class="footer">Made with ♥ by 葳點子 Wei's Points</div>
+</div>
+
+<script>
+  // Toggle groups
+  document.querySelectorAll('[id$="-group"]').forEach(group => {
+    group.querySelectorAll('.toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  });
+
+  // Char counter
+  document.getElementById('video-idea').addEventListener('input', function() {
+    document.getElementById('idea-count').textContent = this.value.length;
+  });
+
+  function getActive(groupId) {
+    return document.querySelector(`#${groupId} .toggle-btn.active`)?.dataset.val || '';
+  }
+
+  async function generate() {
+    const topic    = document.getElementById('topic').value;
+    const platform = getActive('platform-group');
+    const style    = getActive('style-group');
+    const duration = getActive('duration-group');
+    const idea     = document.getElementById('video-idea').value.trim();
+    const channel  = document.getElementById('channel-name').value.trim() || '你的頻道';
+
+    const errorBox  = document.getElementById('error-box');
+    const resultCard = document.getElementById('result-card');
+    errorBox.classList.remove('show');
+    resultCard.classList.remove('show');
+
+    if (!topic) {
+      errorBox.textContent = '⚠️ 請先選擇一個主題方向喔！';
+      errorBox.classList.add('show');
+      return;
+    }
+
+    const btn = document.getElementById('gen-btn');
+    const lbl = document.getElementById('btn-label');
+    btn.disabled = true;
+    lbl.innerHTML = `<div class="loading-wrap"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>腳本產生中...</span></div>`;
+
+    const wordCount = duration === '30–60秒' ? '100–160 字' : '200–280 字';
+    const prompt = `你是一位專業的短影音腳本創作者。請根據以下條件，幫我寫一段短影音腳本：
+
+主題：${topic}
+平台：${platform}
+說話風格：${style}
+影片長度：${duration}
+頻道名稱：${channel}${idea ? `\n創作者的想法：${idea}` : ''}
+
+腳本需求：
+- 長度：適合 ${duration} 朗讀，大約 ${wordCount}（繁體中文）
+- 結構：需包含 ①開場掛鉤Hook（前5秒抓住注意力）、②中段內容（核心價值3點）、③結束CTA行動呼籲
+- 風格：${style}，符合 ${platform} 平台調性
+- CTA：在結尾提及「${channel}」頻道，引導觀眾追蹤
+- 格式：請用以下標題區隔段落
+  【🎣 開場掛鉤 Hook】
+  【💡 主要內容】
+  【📣 結束 CTA】
+- 語氣自然口語，像真人說話，避免書面化`;
+
+    try {
+      // 呼叫自己的後端 /api/generate，而不是直接打 Anthropic
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `錯誤 ${res.status}`);
+      if (!data.result) throw new Error('回傳內容為空，請再試一次！');
+
+      // Render
+      document.getElementById('script-content').innerHTML = formatScript(data.result);
+      document.getElementById('result-tags').innerHTML =
+        [topic, platform, style, duration].map(t => `<span class="tag">${t}</span>`).join('');
+      resultCard.classList.add('show');
+      resultCard.scrollIntoView({ behavior:'smooth', block:'start' });
+
+    } catch(e) {
+      errorBox.textContent = '❌ 產生失敗：' + e.message;
+      errorBox.classList.add('show');
+    } finally {
+      btn.disabled = false;
+      lbl.textContent = '✦ 立即產生腳本 ✦';
+    }
+  }
+
+  function formatScript(text) {
+    return text.replace(/【([^】]+)】/g, '<span class="sec">【$1】</span>').replace(/\n/g, '<br>');
+  }
+
+  function copyScript() {
+    const text = document.getElementById('script-content').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = '✅ 已複製！';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = '📋 複製全文'; btn.classList.remove('copied'); }, 2500);
+    });
+  }
+</script>
+
+</body>
+</html>
